@@ -1,0 +1,31 @@
+import yfinance as yf
+import pandas as pd
+
+tickers = [
+    # Industrial y defensa
+    "LMT", "BA", "GD", "NOC", "RTX", "HON", "CAT", "DE",
+    "MMM", "GE", "EMR", "ITW", "LHX", "TXT", "ETN",
+    # Salud
+    "BMY", "JNJ", "PFE", "MRK", "ABT", "LLY", "AMGN", "MDT",
+    "UNH", "CVS", "CI", "BAX", "BDX", "SYK", "TMO",
+    # Financiero
+    "STT", "JPM", "BAC", "WFC", "C", "AXP", "USB", "PNC",
+    "BK", "SCHW", "AIG", "MMC", "CB", "TRV", "AFL",
+    # Consumo
+    "KO", "PG", "WMT", "MCD", "PEP", "CL", "KMB", "HD",
+    "LOW", "TGT", "NKE", "GIS", "HSY", "CLX", "COST",
+]
+
+todas = []
+
+for ticker in tickers:
+    df_raw = yf.download(ticker, start="1996-09-17", end="2026-09-17")
+    df_raw.to_csv(f"{ticker}.csv")
+
+    df_clean = pd.read_csv(f"{ticker}.csv", skiprows=3, names=['Date', 'Close', 'High', 'Low', 'Open', 'Volume'])
+    df_clean['Date'] = pd.to_datetime(df_clean['Date'])
+    df_clean.set_index('Date', inplace=True)
+    df_clean['Ticker'] = ticker
+    todas.append(df_clean)
+
+pd.concat(todas).to_csv("precios.csv")
