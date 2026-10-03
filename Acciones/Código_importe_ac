@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 
 tickers = [
-    # Industrial y defensa
+    # Industrial 
     "LMT", "BA", "GD", "NOC", "RTX", "HON", "CAT", "DE",
     "MMM", "GE", "EMR", "ITW", "LHX", "TXT", "ETN",
     # Salud
