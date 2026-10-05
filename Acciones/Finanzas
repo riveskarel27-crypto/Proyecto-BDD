@@ -3,8 +3,8 @@ import pandas as pd
 
 tickers = [
     "STT", "JPM", "BAC", "WFC", "C",
-    "AXP", "USB", "PNC", "BK", "SCHW",
-    "AIG", "MMC", "CB", "TRV", "AFL"
+    "AXP", "USB", "PNC", "BNY", "SCHW",
+    "AIG", "MRSH", "CB", "TRV", "AFL"
 ]
 
 datos = []
