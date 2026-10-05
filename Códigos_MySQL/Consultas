@@ -12,7 +12,69 @@ create database acciones;
 # ----------------------------------------- 
 use acciones;
 
+# -----------------------------------------
+# Creamos las tablas
+# ----------------------------------------- 
+
+CREATE TABLE financiero (
+  fecha DATE,
+  ticker VARCHAR(10),
+  apertura DOUBLE, maximo DOUBLE,
+  minimo DOUBLE, 
+  cierre DOUBLE,
+  cierre_ajustado DOUBLE,
+  volumen BIGINT
+);
+
+CREATE TABLE industrial (
+  fecha DATE,
+  ticker VARCHAR(10),
+  apertura DOUBLE, maximo DOUBLE,
+  minimo DOUBLE, 
+  cierre DOUBLE,
+  cierre_ajustado DOUBLE,
+  volumen BIGINT
+);
+CREATE TABLE salud (
+  fecha DATE,
+  ticker VARCHAR(10),
+  apertura DOUBLE, maximo DOUBLE,
+  minimo DOUBLE, 
+  cierre DOUBLE,
+  cierre_ajustado DOUBLE,
+  volumen BIGINT
+);
+CREATE TABLE consumo (
+  fecha DATE,
+  ticker VARCHAR(10),
+  apertura DOUBLE, maximo DOUBLE,
+  minimo DOUBLE, 
+  cierre DOUBLE,
+  cierre_ajustado DOUBLE,
+  volumen BIGINT
+);
+
+
 # -----------------------------
+# IMPORTAR LOS DATOS
+# ----------------------------- 
+#Permite descargar los archivos de la computadora
+SET PERSIST local_infile = 1;
+
+LOAD DATA LOCAL INFILE 'C:/Users/santi/OneDrive/Documents/datos/precios_financiero.csv'
+INTO TABLE financiero
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\r\n'
+IGNORE 1 LINES;
+
+LOAD DATA LOCAL INFILE 'C:/Users/santi/OneDrive/Documents/datos/precios_consumo.csv'
+INTO TABLE consumo
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\r\n'
+IGNORE 1 LINES;
+
+
+# ----------------------------
 # Vemos los datos de cada tabla
 # ----------------------------- 
 select * from financiero;
@@ -20,28 +82,21 @@ select * from salud;
 select * from consumo;
 select * from industrial;
 
-# ---------------------------------------------------------------
-# Modificamos la columna de fecha para que se guarden como fechas
-# ---------------------------------------------------------------
-ALTER TABLE financiero MODIFY fecha DATE;
-ALTER TABLE salud MODIFY fecha DATE;
-ALTER TABLE consumo MODIFY fecha DATE;
-ALTER TABLE industrial MODIFY fecha DATE;
-
 # ----------------
-# Primer consulta 
+# Primera consulta 
 # ----------------
 SELECT 
 	f.fecha, 
-	ROUND(f.cierre, 2) AS Financiero_Close, 
-	ROUND(s.cierre, 2) AS Salud_Close, 
-	ROUND(c.cierre, 2) AS Consumo_Close, 
-	ROUND(i.cierre, 2) AS Industrial_Close
-FROM (SELECT fecha, AVG(cierre) AS cierre FROM financiero GROUP BY fecha) f
-INNER JOIN (SELECT fecha, AVG(cierre) AS cierre FROM salud GROUP BY fecha) s ON f.fecha = s.fecha
-INNER JOIN (SELECT fecha, AVG(cierre) AS cierre FROM consumo GROUP BY fecha) c ON f.fecha = c.fecha
-INNER JOIN (SELECT fecha, AVG(cierre) AS cierre FROM industrial GROUP BY fecha) i ON f.fecha = i.fecha
-WHERE f.fecha BETWEEN '2024-01-01' AND '2024-12-31'
+	ROUND(i.cierre, 2) AS LMT_Close, 
+	ROUND(s.cierre, 2) AS BMY_Close, 
+	ROUND(f.cierre, 2) AS STT_Close,
+	ROUND(c.cierre, 2) AS KO_Close
+FROM financiero f
+LEFT JOIN industrial i ON f.fecha = i.fecha AND i.ticker = 'LMT'
+LEFT JOIN salud s ON f.fecha = s.fecha AND s.ticker = 'BMY'
+LEFT JOIN consumo c ON f.fecha = c.fecha AND c.ticker = 'KO'
+WHERE f.ticker = 'STT'
+  AND f.fecha BETWEEN '2024-01-01' AND '2024-12-31'
 ORDER BY f.fecha ASC;
 
 # -----------------
@@ -50,24 +105,24 @@ ORDER BY f.fecha ASC;
 
 SELECT 
     DATE_FORMAT(f.fecha, '%Y-%m') AS Mes,
-    ROUND(AVG(f.cierre), 2) AS Financiero_Avg,
-    ROUND(AVG(s.cierre), 2) AS Salud_Avg,
-    ROUND(AVG(c.cierre), 2) AS Consumo_Avg,
-    ROUND(AVG(i.cierre), 2) AS Industrial_Avg
-FROM (SELECT fecha, AVG(cierre) AS cierre FROM financiero GROUP BY fecha) f
-INNER JOIN (SELECT fecha, AVG(cierre) AS cierre FROM salud GROUP BY fecha) s ON f.fecha = s.fecha
-INNER JOIN (SELECT fecha, AVG(cierre) AS cierre FROM consumo GROUP BY fecha) c ON f.fecha = c.fecha
-INNER JOIN (SELECT fecha, AVG(cierre) AS cierre FROM industrial GROUP BY fecha) i ON f.fecha = i.fecha
+    ROUND(AVG(i.cierre), 2) AS LMT_Avg,
+    ROUND(AVG(s.cierre), 2) AS BMY_Avg,
+    ROUND(AVG(f.cierre), 2) AS STT_Avg,
+    ROUND(AVG(c.cierre), 2) AS KO_Avg
+FROM financiero f
+LEFT JOIN industrial i ON f.fecha = i.fecha AND i.ticker = 'LMT'
+LEFT JOIN salud s ON f.fecha = s.fecha AND s.ticker = 'BMY'
+LEFT JOIN consumo c ON f.fecha = c.fecha AND c.ticker = 'KO'
+WHERE f.ticker = 'STT'
 GROUP BY DATE_FORMAT(f.fecha, '%Y-%m')
 ORDER BY Mes ASC;
-
 # -----------------
 # tercera consulta
 # -----------------
-SELECT 'Financiero' AS Sector, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM financiero
+SELECT 'LMT' AS Ticker, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM industrial WHERE ticker = 'LMT'
 UNION ALL
-SELECT 'Salud' AS Sector, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM salud
+SELECT 'BMY' AS Ticker, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM salud WHERE ticker = 'BMY'
 UNION ALL
-SELECT 'Consumo' AS Sector, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM consumo
+SELECT 'STT' AS Ticker, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM financiero WHERE ticker = 'STT'
 UNION ALL
-SELECT 'Industrial' AS Sector, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM industrial;
+SELECT 'KO' AS Ticker, MIN(minimo) AS Minimo, MAX(maximo) AS Maximo, AVG(volumen) AS Vol_Promedio FROM consumo WHERE ticker = 'KO';
